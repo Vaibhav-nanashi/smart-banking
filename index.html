@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Banking Transaction Simulator — Academic Project</title>
+  <meta name="description" content="A Python-based Banking Transaction Simulator with file storage. Explore features, demo interactions, team details, and references."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --card: #11162a;
+      --muted: #9aa4bf;
+      --primary: #60a5fa;
+      --primary-600: #3b82f6;
+      --accent: #22d3ee;
+      --success: #34d399;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --ring: rgba(96,165,250,.45);
+    }
+    html, body {
+      background: radial-gradient(1200px 600px at 80% -10%, rgba(34,211,238,.15), transparent 60%),
+                  radial-gradient(900px 500px at -10% 20%, rgba(96,165,250,.18), transparent 60%),
+                  var(--bg);
+      color: #e5e7eb;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      scroll-behavior: smooth;
+    }
+    .glass {
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border: 1px solid rgba(255,255,255,.08);
+      backdrop-filter: blur(12px);
+    }
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      transition: all 0.3s ease;
+    }
+    .card:hover {
+      border-color: rgba(255,255,255,.15);
+      box-shadow: 0 15px 40px rgba(0,0,0,.45);
+    }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: .5rem; padding: .75rem 1.1rem; border-radius: 12px;
+      font-weight: 600; transition: all .25s ease; border: 1px solid transparent;
+      cursor: pointer; position: relative; overflow: hidden;
+    }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: #0b1020; box-shadow: 0 10px 20px rgba(96,165,250,.25);
+    }
+    .btn-primary:hover:not(:disabled) { 
+      transform: translateY(-2px); 
+      box-shadow: 0 16px 28px rgba(96,165,250,.35); 
+    }
+    .btn-primary.active {
+      box-shadow: 0 0 0 4px rgba(96,165,250,.3);
+    }
+    .btn-ghost { 
+      background: rgba(255,255,255,.06); 
+      border-color: rgba(255,255,255,.12); 
+      color: #e5e7eb; 
+    }
+    .btn-ghost:hover:not(:disabled) { 
+      border-color: rgba(255,255,255,.25); 
+      transform: translateY(-2px); 
+    }
+    .btn-ghost.active {
+      background: rgba(96,165,250,.15);
+      border-color: rgba(96,165,250,.3);
+    }
+    .btn-danger {
+      background: rgba(239,68,68,.2);
+      border-color: rgba(239,68,68,.3);
+      color: #ef4444;
+    }
+    .btn-danger:hover:not(:disabled) {
+      background: rgba(239,68,68,.3);
+      transform: translateY(-2px);
+    }
+    .tag {
+      display: inline-flex; align-items: center; gap: .4rem;
+      font-size: .75rem; padding: .25rem .6rem; border-radius: 999px;
+      background: rgba(96,165,250,.15); color: #cfe3ff; border: 1px solid rgba(96,165,250,.3);
+    }
+    .shine {
+      position: relative; overflow: hidden;
+    }
+    .shine::after {
+      content: ""; position: absolute; inset: -200%;
+      background: conic-gradient(from 180deg at 50% 50%, transparent 0 20%, rgba(255,255,255,.06) 25%, transparent 30% 100%);
+      animation: rotate 6s linear infinite;
+    }
+    @keyframes rotate { to { transform: rotate(360deg); } }
+    .pulse {
+      animation: pulseGlow 2.5s ease-in-out infinite;
+    }
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(96,165,250,.0); }
+      50% { box-shadow: 0 0 0 12px rgba(96,165,250,.1); }
+    }
+    .divider {
+      height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent);
+    }
+    .section-title {
+      font-weight: 800; letter-spacing: -0.02em;
+      background: linear-gradient(90deg, #fff, #cde3ff);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .input {
+      background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
+      border-radius: 12px; padding: .75rem .9rem; color: #e5e7eb; width: 100%;
+      outline: none; transition: box-shadow .2s, border-color .2s;
+    }
+    .input:focus { 
+      border-color: var(--ring); 
+      box-shadow: 0 0 0 4px var(--ring); 
+    }
+    .status-dot {
+      width: 10px; height: 10px; border-radius: 999px;
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: .5; }
+    }
+    .balance {
+      font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em;
+      background: linear-gradient(90deg, #60a5fa, #22d3ee);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .grid-auto {
+      display: grid; grid-template-columns: repeat(12, minmax(0,1fr)); gap: 1rem;
+    }
+    @media (max-width: 1024px) {
+      .grid-auto { grid-template-columns: repeat(6, minmax(0,1fr)); }
+      .balance { font-size: 2rem; }
+    }
+    @media (max-width: 640px) {
+      .grid-auto { grid-template-columns: repeat(1, minmax(0,1fr)); }
+      .balance { font-size: 1.75rem; }
+    }
+    .footer-link { color: #b8c1d9; transition: color 0.2s; }
+    .footer-link:hover { color: #e5e7eb; }
+    
+    .fade-in {
+      animation: fadeIn 0.5s ease-in;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .stat-card {
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.1), transparent);
+      transition: left 0.5s;
+    }
+    .stat-card:hover::before {
+      left: 100%;
+    }
+    
+    .mobile-menu {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(11, 16, 32, 0.98);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+      padding: 2rem;
+    }
+    .mobile-menu.active {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 2rem;
+    }
+    .mobile-menu a {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #e5e7eb;
+      transition: color 0.2s;
+    }
+    .mobile-menu a:hover {
+      color: var(--primary);
+    }
+    
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 4px;
+      cursor: pointer;
+      padding: 8px;
+    }
+    .hamburger span {
+      width: 24px;
+      height: 3px;
+      background: #e5e7eb;
+      border-radius: 2px;
+      transition: all 0.3s;
+    }
+    .hamburger.active span:nth-child(1) {
+      transform: rotate(45deg) translate(6px, 6px);
+    }
+    .hamburger.active span:nth-child(2) {
+      opacity: 0;
+    }
+    .hamburger.active span:nth-child(3) {
+      transform: rotate(-45deg) translate(6px, -6px);
+    }
+    
+    @media (max-width: 768px) {
+      .hamburger { display: flex; }
+      .desktop-nav { display: none !important; }
+    }
+    
+    .notification {
+      position: fixed;
+      top: 5rem;
+      right: 2rem;
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.5);
+      z-index: 1000;
+      animation: slideIn 0.3s ease-out;
+      max-width: 400px;
+    }
+    @keyframes slideIn {
+      from { transform: translateX(400px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    .notification.success {
+      background: linear-gradient(135deg, rgba(52,211,153,.2), rgba(52,211,153,.1));
+      border: 1px solid rgba(52,211,153,.3);
+    }
+    .notification.error {
+      background: linear-gradient(135deg, rgba(239,68,68,.2), rgba(239,68,68,.1));
+      border: 1px solid rgba(239,68,68,.3);
+    }
+    .notification.info {
+      background: linear-gradient(135deg, rgba(34,211,238,.2), rgba(34,211,238,.1));
+      border: 1px solid rgba(34,211,238,.3);
+    }
+
+    /* Auth Pages Styles */
+    .auth-page {
+      display: none;
+      min-height: 100vh;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .auth-page.active {
+      display: flex;
+    }
+    .auth-card {
+      max-width: 450px;
+      width: 100%;
+    }
+    .page-content {
+      display: none;
+    }
+    .page-content.active {
+      display: block;
+    }
+    .hidden {
+      display: none !important;
+    }
+    .user-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: rgba(96,165,250,.15);
+      border: 1px solid rgba(96,165,250,.3);
+      border-radius: 999px;
+      font-size: 0.875rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- Login Page -->
+  <div id="loginPage" class="auth-page active">
+    <div class="auth-card card p-8">
+      <div class="text-center mb-8">
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-slate-900 font-extrabold text-2xl mx-auto mb-4">BT</div>
+        <h1 class="text-3xl font-extrabold mb-2">Welcome Back</h1>
+        <p class="text-slate-400">Sign in to access your account</p>
+      </div>
+
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="mb-4">
+          <label class="text-slate-300 text-sm block mb-2">Username</label>
+          <input type="text" id="loginUsername" class="input" placeholder="Enter your username" required />
+        </div>
+        <div class="mb-6">
+          <label class="text-slate-300 text-sm block mb-2">Password</label>
+          <input type="password" id="loginPassword" class="input" placeholder="Enter your password" required />
+        </div>
+        <button type="submit" class="btn btn-primary w-full mb-4">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3l-6 6-6-6"/></svg>
+          Sign In
+        </button>
+        <div class="text-center text-sm text-slate-400">
+          Don't have an account? 
+          <a href="#" onclick="showRegister(event)" class="text-cyan-300 hover:text-cyan-200">Register here</a>
+        </div>
+      </form>
+
+      <div class="divider my-6"></div>
+      <div class="text-center text-xs text-slate-500">
+        Demo credentials: username: <span class="text-cyan-400">demo</span> | password: <span class="text-cyan-400">demo123</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Register Page -->
+  <div id="registerPage" class="auth-page">
+    <div class="auth-card card p-8">
+      <div class="text-center mb-8">
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-slate-900 font-extrabold text-2xl mx-auto mb-4">BT</div>
+        <h1 class="text-3xl font-extrabold mb-2">Create Account</h1>
+        <p class="text-slate-400">Register to start banking simulation</p>
+      </div>
+
+      <form id="registerForm" onsubmit="handleRegister(event)">
+        <div class="mb-4">
+          <label class="text-slate-300 text-sm block mb-2">Full Name</label>
+          <input type="text" id="registerName" class="input" placeholder="Enter your full name" required />
+        </div>
+        <div class="mb-4">
+          <label class="text-slate-300 text-sm block mb-2">Username</label>
+          <input type="text" id="registerUsername" class="input" placeholder="Choose a username" required minlength="3" />
+        </div>
+        <div class="mb-4">
+          <label class="text-slate-300 text-sm block mb-2">Password</label>
+          <input type="password" id="registerPassword" class="input" placeholder="Create a password" required minlength="6" />
+        </div>
+        <div class="mb-6">
+          <label class="text-slate-300 text-sm block mb-2">Confirm Password</label>
+          <input type="password" id="registerConfirmPassword" class="input" placeholder="Confirm your password" required />
+        </div>
+        <button type="submit" class="btn btn-primary w-full mb-4">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          Create Account
+        </button>
+        <div class="text-center text-sm text-slate-400">
+          Already have an account? 
+          <a href="#" onclick="showLogin(event)" class="text-cyan-300 hover:text-cyan-200">Sign in here</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main Content (Hidden until logged in) -->
+  <div id="mainContent" class="page-content">
+    <!-- Mobile Menu -->
+    <div id="mobileMenu" class="mobile-menu">
+      <a href="#home" onclick="closeMobileMenu()">Home</a>
+      <a href="#about" onclick="closeMobileMenu()">About</a>
+      <a href="#features" onclick="closeMobileMenu()">Features</a>
+      <a href="#demo" onclick="closeMobileMenu()">Demo</a>
+      <a href="#team" onclick="closeMobileMenu()">Team</a>
+      <a href="#references" onclick="closeMobileMenu()">References</a>
+      <a href="#" onclick="handleLogout(event)" class="text-rose-400">Logout</a>
+    </div>
+
+    <!-- Sticky nav -->
+    <header class="sticky top-0 z-50 backdrop-blur-xl">
+      <div class="glass">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <div class="flex items-center justify-between">
+            <a href="#" class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-slate-900 font-extrabold">BT</div>
+              <div class="leading-tight">
+                <div class="font-extrabold tracking-tight">Banking Transaction Simulator</div>
+                <div class="text-xs text-slate-400">Academic Project</div>
+              </div>
+            </a>
+            <nav class="desktop-nav hidden md:flex items-center gap-6 text-sm">
+              <a href="#home" class="text-slate-300 hover:text-white transition">Home</a>
+              <a href="#about" class="text-slate-300 hover:text-white transition">About</a>
+              <a href="#features" class="text-slate-300 hover:text-white transition">Features</a>
+              <a href="#demo" class="text-slate-300 hover:text-white transition">Demo</a>
+              <a href="#team" class="text-slate-300 hover:text-white transition">Team</a>
+              <a href="#references" class="text-slate-300 hover:text-white transition">References</a>
+            </nav>
+            <div class="flex items-center gap-3">
+              <div class="user-badge hidden md:flex">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="5" r="3"/><path d="M2 13a6 6 0 0112 0"/></svg>
+                <span id="userNameDisplay">User</span>
+              </div>
+              <button onclick="handleLogout(event)" class="btn btn-danger text-sm hidden md:inline-flex">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 00-2 2v10a2 2 0 002 2h4M16 12l-4-4m0 0l-4 4m4-4H9"/></svg>
+                Logout
+              </button>
+              <div id="hamburger" class="hamburger" onclick="toggleMobileMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Hero -->
+    <section id="home" class="relative overflow-hidden">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-20 md:pt-24 md:pb-28">
+        <div class="grid lg:grid-cols-2 gap-10 items-center">
+          <div>
+            <span class="tag mb-4">
+              <svg width="16" height="16" fill="currentColor" class="opacity-80"><path d="M8 0l2.39 4.84L16 5.64l-4 3.9.94 5.48L8 12.9l-4.94 2.28L4 9.58 0 5.64l5.61-.8L8 0z"/></svg>
+              Python + File-based Storage
+            </span>
+            <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight mb-5">
+              Banking Transaction Simulator
+            </h1>
+            <p class="text-slate-300 text-lg leading-relaxed mb-8">
+              A modular, menu-driven system that simulates real banking operations—deposit, withdrawal, and balance inquiry—using text files for permanent storage. Built for students to learn digital banking workflows interactively.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-3">
+              <a href="#demo" class="btn btn-primary pulse">Launch Simulator</a>
+              <a href="#about" class="btn btn-ghost">Learn More</a>
+            </div>
+            <div class="mt-6 flex items-center gap-4 text-sm text-slate-400">
+              <div class="flex -space-x-2">
+                <div class="w-7 h-7 rounded-full bg-blue-500 border border-slate-700"></div>
+                <div class="w-7 h-7 rounded-full bg-cyan-400 border border-slate-700"></div>
+                <div class="w-7 h-7 rounded-full bg-emerald-500 border border-slate-700"></div>
+              </div>
+              <span>Trusted by educators & learners</span>
+            </div>
+          </div>
+          <div class="relative">
+            <div class="card shine p-6 md:p-8">
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center">
+                    <svg width="22" height="22" fill="none" stroke="#0b1020" stroke-width="2"><path d="M3 10l4-4 4 4 6-6"/></svg>
+                  </div>
+                  <div>
+                    <div class="font-semibold">Account Summary</div>
+                    <div class="text-xs text-slate-400">Live Preview</div>
+                  </div>
+                </div>
+                <span class="tag">Menu-Driven</span>
+              </div>
+              <div class="grid grid-cols-3 gap-4">
+                <div class="stat-card p-4 rounded-xl bg-white/5 border border-white/10">
+                  <div class="text-xs text-slate-400">Balance</div>
+                  <div id="heroBalance" class="balance mt-1">₹0.00</div>
+                </div>
+                <div class="stat-card p-4 rounded-xl bg-white/5 border border-white/10">
+                  <div class="text-xs text-slate-400">Deposits</div>
+                  <div id="heroDeposits" class="text-2xl font-semibold mt-1">0</div>
+                </div>
+                <div class="stat-card p-4 rounded-xl bg-white/5 border border-white/10">
+                  <div class="text-xs text-slate-400">Withdrawals</div>
+                  <div id="heroWithdrawals" class="text-2xl font-semibold mt-1">0</div>
+                </div>
+              </div>
+              <div class="divider my-6"></div>
+              <div class="flex items-center gap-3">
+                <div class="status-dot bg-emerald-400"></div>
+                <div class="text-sm text-slate-300">Secure & Modular Design</div>
+              </div>
+            </div>
+            <div class="absolute -bottom-6 -left-6 w-24 h-24 rounded-2xl bg-blue-500/20 blur-2xl"></div>
+            <div class="absolute -top-6 -right-6 w-24 h-24 rounded-2xl bg-cyan-400/20 blur-2xl"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- About -->
+    <section id="about" class="py-16 md:py-24">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid lg:grid-cols-3 gap-8">
+          <div class="lg:col-span-1">
+            <h2 class="section-title text-3xl md:text-4xl">About the Project</h2>
+            <p class="text-slate-300 mt-4 leading-relaxed">
+              The Banking Transaction Simulator is a Python-first, file-based application that demonstrates real-world banking operations without a live bank dependency. It helps learners understand digital workflows, file I/O, and modular programming through hands-on interaction.
+            </p>
+          </div>
+          <div class="lg:col-span-2 grid gap-6">
+            <div class="card p-6 fade-in">
+              <div class="flex items-center gap-3 mb-3">
+                <div class="w-9 h-9 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                  <svg width="18" height="18" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M3 6h12M3 10h12M3 14h12"/></svg>
+                </div>
+                <div class="font-semibold">Problem Statement</div>
+              </div>
+              <p class="text-slate-300">
+                Many educational resources lack an immediate, safe sandbox to simulate banking operations. Learners need a dependable, transparent system that stores data persistently and demonstrates overdraft prevention, menu navigation, and modular logic.
+              </p>
+            </div>
+            <div class="card p-6 fade-in" style="animation-delay: 0.1s">
+              <div class="flex items-center gap-3 mb-3">
+                <div class="w-9 h-9 rounded-lg bg-cyan-400/20 flex items-center justify-center">
+                  <svg width="18" height="18" fill="none" stroke="#22d3ee" stroke-width="2"><path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg>
+                </div>
+                <div class="font-semibold">Project Objective</div>
+              </div>
+              <p class="text-slate-300">
+                To create a clear, extensible simulator that teaches students core concepts of banking, file handling, and software design through a realistic interface with robust error handling and demo-friendly UX.
+              </p>
+            </div>
+            <div class="card p-6 fade-in" style="animation-delay: 0.2s">
+              <div class="flex items-center gap-3 mb-3">
+                <div class="w-9 h-9 rounded-lg bg-emerald-400/20 flex items-center justify-center">
+                  <svg width="18" height="18" fill="none" stroke="#34d399" stroke-width="2"><path d="M4 12l4 4 8-8"/></svg>
+                </div>
+                <div class="font-semibold">Innovation & Uniqueness</div>
+              </div>
+              <p class="text-slate-300">
+                Combines in-browser simulation logic with offline-ready data persistence, an educational focus, and a clean, modern UI crafted for quick comprehension. Includes optional Flask integration for advanced users.
+              </p>
+            </div>
+            <div class="card p-6 fade-in" style="animation-delay: 0.3s">
+              <div class="flex items-center gap-3 mb-3">
+                <div class="w-9 h-9 rounded-lg bg-violet-400/20 flex items-center justify-center">
+                  <svg width="18" height="18" fill="none" stroke="#a78bfa" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+                </div>
+                <div class="font-semibold">Real-world Relevance</div>
+              </div>
+              <p class="text-slate-300">
+                Skills learned—understanding transactions, exceptions, file I/O, and modular design—are directly transferable to banking systems, fintech applications, and enterprise software in production environments.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features" class="py-16 md:py-24">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="section-title text-3xl md:text-4xl mb-8">Key Features</h2>
+        <div class="grid-auto">
+          <div class="card p-6 col-span-12 sm:col-span-6 lg:col-span-4 fade-in">
+            <div class="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center mb-4">
+              <svg width="22" height="22" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            </div>
+            <div class="font-semibold mb-2">Deposit Money</div>
+            <p class="text-slate-300 text-sm">Add funds with validation and immediate live reflection of balance.</p>
+          </div>
+          <div class="card p-6 col-span-12 sm:col-span-6 lg:col-span-4 fade-in" style="animation-delay: 0.1s">
+            <div class="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center mb-4">
+              <svg width="22" height="22" fill="none" stroke="#34d399" stroke-width="2"><path d="M4 12h16M12 4v16"/></svg>
+            </div>
+            <div class="font-semibold mb-2">Withdraw Money</div>
+            <p class="text-slate-300 text-sm">Simulate withdrawals with overdraft prevention and failed-transaction feedback.</p>
+          </div>
+          <div class="card p-6 col-span-12 sm:col-span-6 lg:col-span-4 fade-in" style="animation-delay: 0.2s">
+            <div class="w-12 h-12 rounded-xl bg-cyan-400/20 flex items-center justify-center mb-4">
+              <svg width="22" height="22" fill="none" stroke="#22d3ee" stroke-width="2"><path d="M3 12h18M12 3v18"/></svg>
+            </div>
+            <div class="font-semibold mb-2">Check Balance</div>
+            <p class="text-slate-300 text-sm">Clear, concise display of current account balance at any time.</p>
+          </div>
+          <div class="card p-6 col-span-12 sm:col-span-6 lg:col-span-4 fade-in" style="animation-delay: 0.3s">
+            <div class="w-12 h-12 rounded-xl bg-violet-400/20 flex items-center justify-center mb-4">
+              <svg width="22" height="22" fill="none" stroke="#a78bfa" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+            </div>
+            <div class="font-semibold mb-2">File-based Persistence</div>
+            <p class="text-slate-300 text-sm">Use simple .txt files to store and load account state persistently.</p>
+          </div>
+          <div class="card p-6 col-span-12 sm:col-span-6 lg:col-span-4 fade-in" style="animation-delay: 0.4s">
+            <div class="w-12 h-12 rounded-xl bg-amber-400/20 flex items-center justify-center mb-4">
+              <svg width="22" height="22" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg>
+            </div>
+            <div class="font-semibold mb-2">Secure & Modular</div>
+            <p class="text-slate-300 text-sm">Clean separation of concerns with modular functions and error handling.</p>
+          </div>
+          <div class="card p-6 col-span-12 sm:col-span-6 lg:col-span-4 fade-in" style="animation-delay: 0.5s">
+            <div class="w-12 h-12 rounded-xl bg-rose-400/20 flex items-center justify-center mb-4">
+              <svg width="22" height="22" fill="none" stroke="#fb7185" stroke-width="2"><path d="M3 12a9 9 0 1 0 18 0"/></svg>
+            </div>
+            <div class="font-semibold mb-2">Realistic UX</div>
+            <p class="text-slate-300 text-sm">Menu-driven flow with friendly messages and consistent theming.</p>
+          </div>
+          <div class="card p-6 col-span-12 sm:col-span-6 lg:col-span-4 fade-in" style="animation-delay: 0.6s">
+            <div class="w-12 h-12 rounded-xl bg-indigo-400/20 flex items-center justify-center mb-4">
+              <svg width="22" height="22" fill="none" stroke="#818cf8" stroke-width="2"><path d="M3 10h10M3 6h10M8 14V2"/></svg>
+            </div>
+            <div class="font-semibold mb-2">Apply for Loan</div>
+            <p class="text-slate-300 text-sm">Request loans with validation and automatic balance updates for approved amounts.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Demo / Simulator -->
+    <section id="demo" class="py-16 md:py-24">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-end justify-between mb-8">
+          <div>
+            <h2 class="section-title text-3xl md:text-4xl">Live Simulator</h2>
+            <p class="text-slate-300 mt-2">Interact with the banking system. Data is stored locally in your browser.</p>
+          </div>
+          <div class="hidden md:flex items-center gap-2 text-sm text-slate-400">
+            <div class="status-dot bg-emerald-400"></div> Ready
+          </div>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-8">
+          <!-- UI Panel -->
+          <div class="lg:col-span-2 card p-6 md:p-8">
+            <div class="flex items-center justify-between mb-6">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                  <svg width="20" height="20" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M3 10l4-4 4 4 6-6"/></svg>
+                </div>
+                <div>
+                  <div class="font-semibold">Account Simulator</div>
+                  <div class="text-xs text-slate-400">Browser-based demo</div>
+                </div>
+              </div>
+              <span class="tag">Authenticated</span>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6">
+              <div class="p-5 rounded-xl bg-white/5 border border-white/10">
+                <div class="flex items-center justify-between mb-3">
+                  <div class="text-slate-300">Current Balance</div>
+                  <div class="status-dot bg-emerald-400"></div>
+                </div>
+                <div id="balanceDisplay" class="balance">₹0.00</div>
+                <div class="text-xs text-slate-400 mt-2">Auto-saved: <span id="lastUpdate">Never</span></div>
+                <div class="divider my-4"></div>
+                <div class="flex items-center justify-between mb-2">
+                  <div class="text-xs text-slate-400">Transaction History</div>
+                  <button onclick="exportHistory()" class="text-xs text-cyan-300 hover:text-cyan-200">Export</button>
+                </div>
+                <ul id="history" class="mt-2 space-y-2 text-sm max-h-48 overflow-auto pr-2">
+                  <li class="text-slate-400 text-center py-4">No transactions yet.</li>
+                </ul>
+              </div>
+
+              <div class="p-5 rounded-xl bg-white/5 border border-white/10">
+                <div class="text-slate-300 mb-3">Select Operation</div>
+                <div class="grid grid-cols-2 gap-3">
+                  <button id="btnDeposit" class="btn btn-ghost text-xs">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                    Deposit
+                  </button>
+                  <button id="btnWithdraw" class="btn btn-ghost text-xs">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/></svg>
+                    Withdraw
+                  </button>
+                  <button id="btnBalance" class="btn btn-ghost text-xs">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7" cy="7" r="6"/></svg>
+                    Balance
+                  </button>
+                  <button id="btnLoan" class="btn btn-ghost text-xs">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h10M3 6h10M8 14V2"/></svg>
+                    Loan
+                  </button>
+                </div>
+                <div class="divider my-4"></div>
+                <div>
+                  <label class="text-slate-300 text-sm block mb-2">Amount (INR)</label>
+                  <input id="amountInput" type="number" step="0.01" min="0.01" class="input" placeholder="0.00" />
+                </div>
+                <div class="mt-4 grid grid-cols-2 gap-3">
+                  <button id="btnConfirm" class="btn btn-primary text-sm" disabled>
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12l4 4 8-8"/></svg>
+                    Confirm
+                  </button>
+                  <button id="btnReset" class="btn btn-ghost text-sm">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12a8 8 0 1 1 0-8"/><path d="M4 4v8h8"/></svg>
+                    Reset
+                  </button>
+                </div>
+                <div id="statusMsg" class="text-sm mt-3 text-slate-300 min-h-[20px]"></div>
+              </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="mt-6 grid grid-cols-3 gap-4">
+              <div class="p-4 rounded-xl bg-white/5 border border-white/10 text-center">
+                <div class="text-xs text-slate-400 mb-1">Total Deposits</div>
+                <div id="totalDeposits" class="text-xl font-semibold text-emerald-400">₹0.00</div>
+              </div>
+              <div class="p-4 rounded-xl bg-white/5 border border-white/10 text-center">
+                <div class="text-xs text-slate-400 mb-1">Total Withdrawals</div>
+                <div id="totalWithdrawals" class="text-xl font-semibold text-rose-400">₹0.00</div>
+              </div>
+              <div class="p-4 rounded-xl bg-white/5 border border-white/10 text-center">
+                <div class="text-xs text-slate-400 mb-1">Transactions</div>
+                <div id="transactionCount" class="text-xl font-semibold text-cyan-400">0</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Controls / Tips -->
+          <div class="space-y-6">
+            <div class="card p-6">
+              <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                  <svg width="22" height="22" fill="none" stroke="#34d399" stroke-width="2"><path d="M4 12h16M12 4v16"/></svg>
+                </div>
+                <div class="font-semibold">How It Works</div>
+              </div>
+              <ul class="text-sm text-slate-300 space-y-2">
+                <li>• Data auto-saves after every transaction to localStorage.</li>
+                <li>• All data persists even after closing the browser.</li>
+                <li>• Overdraft prevention blocks negative balances.</li>
+                <li>• Export feature downloads transaction history.</li>
+                <li>• Reset clears all data and starts fresh.</li>
+                <li>• Mobile and desktop friendly interface.</li>
+              </ul>
+            </div>
+            <div class="card p-6">
+              <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-400/20 flex items-center justify-center">
+                  <svg width="22" height="22" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg>
+                </div>
+                <div class="font-semibold">Advanced Option</div>
+              </div>
+              <p class="text-sm text-slate-300 mb-3">Want backend integration? Use Python + Flask and connect via a local server. No external services required.</p>
+              <a href="#references" class="text-sm text-cyan-300 hover:text-cyan-200 inline-flex items-center gap-1">
+                See implementation details 
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l6 6-6 6"/></svg>
+              </a>
+            </div>
+            <div class="card p-6">
+              <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 rounded-xl bg-violet-400/20 flex items-center justify-center">
+                  <svg width="22" height="22" fill="none" stroke="#a78bfa" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
+                </div>
+                <div class="font-semibold">Quick Actions</div>
+              </div>
+              <div class="space-y-2">
+                <button onclick="quickDeposit(1000)" class="w-full btn btn-ghost text-sm">
+                  Quick Deposit ₹1,000
+                </button>
+                <button onclick="quickDeposit(5000)" class="w-full btn btn-ghost text-sm">
+                  Quick Deposit ₹5,000
+                </button>
+                <button onclick="downloadAccountFile()" class="w-full btn btn-ghost text-sm">
+                  Download account.txt
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Team -->
+    <section id="team" class="py-16 md:py-24">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="section-title text-3xl md:text-4xl mb-8">Team</h2>
+        <div class="grid md:grid-cols-3 gap-6">
+          <div class="card p-6 fade-in">
+            <div class="flex items-center gap-4 mb-4">
+              <div class="w-14 h-14 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                <span class="font-bold text-xl">VS</span>
+              </div>
+              <div>
+                <div class="font-semibold text-lg">Vaibhav S.</div>
+                <div class="text-sm text-slate-400">Project Lead</div>
+              </div>
+            </div>
+            <p class="text-slate-300 text-sm">Designed the UX and overall architecture, focusing on clarity and learning outcomes for educational purposes.</p>
+          </div>
+          <div class="card p-6 fade-in" style="animation-delay: 0.1s">
+            <div class="flex items-center gap-4 mb-4">
+              <div class="w-14 h-14 rounded-xl bg-cyan-400/20 flex items-center justify-center">
+                <span class="font-bold text-xl">YD</span>
+              </div>
+              <div>
+                <div class="font-semibold text-lg">Yogendra D.</div>
+                <div class="text-sm text-slate-400">Team member</div>
+              </div>
+            </div>
+            <p class="text-slate-300 text-sm">Implemented Python logic, menu system, and file handling with robust error handling and validation.</p>
+          </div>
+          <div class="card p-6 fade-in" style="animation-delay: 0.2s">
+            <div class="flex items-center gap-4 mb-4">
+              <div class="w-14 h-14 rounded-xl bg-emerald-400/20 flex items-center justify-center">
+                <span class="font-bold text-xl">VJ</span>
+              </div>
+              <div>
+                <div class="font-semibold text-lg">Vaibhav J.</div>
+                <div class="text-sm text-slate-400">Team member</div>
+              </div>
+            </div>
+            <p class="text-slate-300 text-sm">Built the responsive UI with animations and ensured accessibility, performance, and cross-device compatibility.</p>
+          </div>
+          <div class="card p-6 fade-in" style="animation-delay: 0.3s">
+            <div class="flex items-center gap-4 mb-4">
+              <div class="w-14 h-14 rounded-xl bg-purple-400/20 flex items-center justify-center">
+                <span class="font-bold text-xl">KG</span>
+              </div>
+              <div>
+                <div class="font-semibold text-lg">Kushagra G.</div>
+                <div class="text-sm text-slate-400">Team member</div>
+              </div>
+            </div>
+            <p class="text-slate-300 text-sm">Contributed to testing, documentation, and quality assurance to ensure a robust and reliable simulator.</p>
+          </div>
+        </div>
+        <div class="mt-8 grid md:grid-cols-3 gap-6">
+          <div class="card p-6">
+            <div class="font-semibold mb-2 flex items-center gap-2">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+              Team ID
+            </div>
+            <div class="text-slate-300">BTX-Team-01</div>
+          </div>
+          <div class="card p-6">
+            <div class="font-semibold mb-2 flex items-center gap-2">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg>
+              Roles
+            </div>
+            <div class="text-slate-300">Lead • Backend • Frontend • QA</div>
+          </div>
+          <div class="card p-6">
+            <div class="font-semibold mb-2 flex items-center gap-2">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4-4 4 4 4-4 4 4"/><path d="M3 16l4-4 4 4 4-4 4 4"/></svg>
+              Contact
+            </div>
+            <div class="text-slate-300 text-sm"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="94e0f1f5f9d4f6f5fafffdfaf3e7fdf9e1f8f5e0fbe6baf5f7">[email&#160;protected]</a></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- References -->
+    <section id="references" class="py-16 md:py-24">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="section-title text-3xl md:text-4xl mb-8">References</h2>
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="card p-6 fade-in">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                <svg width="20" height="20" fill="none" stroke="#60a5fa" stroke-width="2"><circle cx="10" cy="10" r="8"/><path d="M10 4v8l6 4"/></svg>
+              </div>
+              <div class="font-semibold">Python Documentation</div>
+            </div>
+            <p class="text-slate-300 text-sm mb-3">Official guide to Python programming, files, exceptions, and modules for building robust applications.</p>
+            <a class="text-cyan-300 text-sm hover:text-cyan-200 inline-flex items-center gap-1" href="https://docs.python.org/3/" target="_blank" rel="noopener">
+              Visit Documentation
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l6 6-6 6"/></svg>
+            </a>
+          </div>
+          <div class="card p-6 fade-in" style="animation-delay: 0.1s">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                <svg width="20" height="20" fill="none" stroke="#34d399" stroke-width="2"><path d="M3 12l4 4L17 6"/></svg>
+              </div>
+              <div class="font-semibold">GeeksforGeeks</div>
+            </div>
+            <p class="text-slate-300 text-sm mb-3">Tutorials, examples, and tips on file I/O, Python basics, and software design patterns.</p>
+            <a class="text-cyan-300 text-sm hover:text-cyan-200 inline-flex items-center gap-1" href="https://www.geeksforgeeks.org/" target="_blank" rel="noopener">
+              Visit GeeksforGeeks
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l6 6-6 6"/></svg>
+            </a>
+          </div>
+          <div class="card p-6 fade-in" style="animation-delay: 0.2s">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-10 h-10 rounded-xl bg-violet-400/20 flex items-center justify-center">
+                <svg width="20" height="20" fill="none" stroke="#a78bfa" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
+              </div>
+              <div class="font-semibold">Flask Framework</div>
+            </div>
+            <p class="text-slate-300 text-sm mb-3">Lightweight web framework for Python, perfect for building backend APIs and web applications.</p>
+            <a class="text-cyan-300 text-sm hover:text-cyan-200 inline-flex items-center gap-1" href="https://flask.palletsprojects.com/" target="_blank" rel="noopener">
+              Visit Flask Docs
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l6 6-6 6"/></svg>
+            </a>
+          </div>
+          <div class="card p-6 fade-in" style="animation-delay: 0.3s">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-10 h-10 rounded-xl bg-amber-400/20 flex items-center justify-center">
+                <svg width="20" height="20" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg>
+              </div>
+              <div class="font-semibold">MDN Web Docs</div>
+            </div>
+            <p class="text-slate-300 text-sm mb-3">Comprehensive resource for HTML, CSS, and JavaScript - essential for web development.</p>
+            <a class="text-cyan-300 text-sm hover:text-cyan-200 inline-flex items-center gap-1" href="https://developer.mozilla.org/" target="_blank" rel="noopener">
+              Visit MDN
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l6 6-6 6"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="pt-16 pb-10">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="card p-6 md:p-8">
+          <div class="grid md:grid-cols-4 gap-6">
+            <div class="md:col-span-2">
+              <div class="flex items-center gap-3 mb-3">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-slate-900 font-extrabold">BT</div>
+                <div class="font-semibold">Banking Transaction Simulator</div>
+              </div>
+              <p class="text-slate-300 text-sm">
+                An academic project to teach digital banking workflows through a realistic, modular, and persistent simulator.
+              </p>
+            </div>
+            <div>
+              <div class="font-semibold mb-3">Links</div>
+              <div class="flex flex-col space-y-2 text-sm">
+                <a class="footer-link" href="#home">Home</a>
+                <a class="footer-link" href="#about">About</a>
+                <a class="footer-link" href="#features">Features</a>
+                <a class="footer-link" href="#demo">Demo</a>
+              </div>
+            </div>
+            <div>
+              <div class="font-semibold mb-3">Resources</div>
+              <div class="flex flex-col space-y-2 text-sm">
+                <a class="footer-link" href="#references">References</a>
+                <a class="footer-link" href="#team">Team</a>
+                <a class="footer-link" href="#" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;">Back to top</a>
+              </div>
+            </div>
+          </div>
+          <div class="divider my-6"></div>
+          <div class="flex flex-col md:flex-row items-center justify-between gap-3 text-sm text-slate-400">
+            <div>© <span id="year"></span> Banking Transaction Simulator. All rights reserved.</div>
+            <div class="flex items-center gap-4">
+              <span class="flex items-center gap-2"><span class="status-dot bg-emerald-400"></span>Operational</span>
+              <a href="#" class="footer-link">Privacy</a>
+              <a href="#" class="footer-link">Terms</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    // ===== AUTHENTICATION STATE =====
+    let currentUser = null;
+
+    // ===== STATE MANAGEMENT =====
+    const STATE = {
+      balance: 0,
+      history: [],
+      selectedOperation: null,
+      stats: {
+        totalDeposits: 0,
+        totalWithdrawals: 0,
+        depositCount: 0,
+        withdrawalCount: 0
+      }
+    };
+
+    const STORAGE_KEYS = {
+      USERS: 'btx_users_v1',
+      CURRENT_USER: 'btx_current_user_v1',
+      getUserHistoryKey: (username) => `btx_history_${username}_v1`,
+      getUserBalanceKey: (username) => `btx_balance_${username}_v1`,
+      getUserStatsKey: (username) => `btx_stats_${username}_v1`
+    };
+
+    // ===== DOM ELEMENTS =====
+    const elements = {
+      amountInput: document.getElementById('amountInput'),
+      statusMsg: document.getElementById('statusMsg'),
+      btnDeposit: document.getElementById('btnDeposit'),
+      btnWithdraw: document.getElementById('btnWithdraw'),
+      btnBalance: document.getElementById('btnBalance'),
+      btnLoan: document.getElementById('btnLoan'),
+      btnConfirm: document.getElementById('btnConfirm'),
+      btnReset: document.getElementById('btnReset'),
+      historyList: document.getElementById('history'),
+      balanceDisplay: document.getElementById('balanceDisplay'),
+      heroBalance: document.getElementById('heroBalance'),
+      heroDeposits: document.getElementById('heroDeposits'),
+      heroWithdrawals: document.getElementById('heroWithdrawals'),
+      lastUpdate: document.getElementById('lastUpdate'),
+      totalDeposits: document.getElementById('totalDeposits'),
+      totalWithdrawals: document.getElementById('totalWithdrawals'),
+      transactionCount: document.getElementById('transactionCount'),
+      userNameDisplay: document.getElementById('userNameDisplay')
+    };
+
+    // ===== AUTHENTICATION FUNCTIONS =====
+    function handleLogin(event) {
+      event.preventDefault();
+      
+      const username = document.getElementById('loginUsername').value.trim();
+      const password = document.getElementById('loginPassword').value;
+
+      // Get users from storage
+      const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '{}');
+
+      // Check if user exists
+      if (!users[username]) {
+        showNotification('User not found. Please register first.', 'error');
+        return;
+      }
+
+      // Verify password
+      if (users[username].password !== password) {
+        showNotification('Incorrect password. Please try again.', 'error');
+        return;
+      }
+
+      // Login successful
+      currentUser = {
+        username: username,
+        name: users[username].name
+      };
+
+      localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(currentUser));
+
+      showNotification(`Welcome back, ${currentUser.name}!`, 'success');
+      
+      // Switch to main content
+      document.getElementById('loginPage').classList.remove('active');
+      document.getElementById('mainContent').classList.add('active');
+      
+      // Load user data
+      loadUserData();
+      
+      // Update UI
+      if (elements.userNameDisplay) {
+        elements.userNameDisplay.textContent = currentUser.name;
+      }
+    }
+
+    function handleRegister(event) {
+      event.preventDefault();
+
+      const name = document.getElementById('registerName').value.trim();
+      const username = document.getElementById('registerUsername').value.trim();
+      const password = document.getElementById('registerPassword').value;
+      const confirmPassword = document.getElementById('registerConfirmPassword').value;
+
+      // Validation
+      if (password !== confirmPassword) {
+        showNotification('Passwords do not match!', 'error');
+        return;
+      }
+
+      if (username.length < 3) {
+        showNotification('Username must be at least 3 characters long.', 'error');
+        return;
+      }
+
+      if (password.length < 6) {
+        showNotification('Password must be at least 6 characters long.', 'error');
+        return;
+      }
+
+      // Get existing users
+      const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '{}');
+
+      // Check if username already exists
+      if (users[username]) {
+        showNotification('Username already exists. Please choose another.', 'error');
+        return;
+      }
+
+      // Create new user
+      users[username] = {
+        name: name,
+        password: password,
+        createdAt: new Date().toISOString()
+      };
+
+      // Save users
+      localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+
+      showNotification('Account created successfully! Please login.', 'success');
+
+      // Clear form
+      document.getElementById('registerForm').reset();
+
+      // Switch to login page
+      showLogin();
+    }
+
+    function handleLogout(event) {
+      if (event) event.preventDefault();
+
+      if (!confirm('Are you sure you want to logout?')) {
+        return;
+      }
+
+      // Save current state before logout
+      saveState();
+
+      // Clear current user
+      currentUser = null;
+      localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+
+      // Reset state
+      resetState();
+
+      // Switch to login page
+      document.getElementById('mainContent').classList.remove('active');
+      document.getElementById('loginPage').classList.add('active');
+
+      showNotification('Logged out successfully!', 'success');
+    }
+
+    function showLogin(event) {
+      if (event) event.preventDefault();
+      document.getElementById('registerPage').classList.remove('active');
+      document.getElementById('loginPage').classList.add('active');
+    }
+
+    function showRegister(event) {
+      if (event) event.preventDefault();
+      document.getElementById('loginPage').classList.remove('active');
+      document.getElementById('registerPage').classList.add('active');
+    }
+
+    function checkAuth() {
+      const savedUser = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
+      
+      if (savedUser) {
+        currentUser = JSON.parse(savedUser);
+        document.getElementById('loginPage').classList.remove('active');
+        document.getElementById('registerPage').classList.remove('active');
+        document.getElementById('mainContent').classList.add('active');
+        
+        loadUserData();
+        
+        if (elements.userNameDisplay) {
+          elements.userNameDisplay.textContent = currentUser.name;
+        }
+      }
+    }
+
+    function loadUserData() {
+      if (!currentUser) return;
+
+      try {
+        const historyKey = STORAGE_KEYS.getUserHistoryKey(currentUser.username);
+        const balanceKey = STORAGE_KEYS.getUserBalanceKey(currentUser.username);
+        const statsKey = STORAGE_KEYS.getUserStatsKey(currentUser.username);
+
+        const history = JSON.parse(localStorage.getItem(historyKey) || '[]');
+        const balance = parseFloat(localStorage.getItem(balanceKey) || '0');
+        const stats = JSON.parse(localStorage.getItem(statsKey) || '{"totalDeposits":0,"totalWithdrawals":0,"depositCount":0,"withdrawalCount":0}');
+        
+        STATE.history = history;
+        STATE.balance = balance;
+        STATE.stats = stats;
+
+        updateBalanceDisplay();
+        updateStatsDisplay();
+        renderHistory();
+      } catch (e) {
+        console.error('Error loading user data:', e);
+        resetState();
+      }
+    }
+
+    // ===== STORAGE FUNCTIONS =====
+    function saveState() {
+      if (!currentUser) return;
+
+      try {
+        const historyKey = STORAGE_KEYS.getUserHistoryKey(currentUser.username);
+        const balanceKey = STORAGE_KEYS.getUserBalanceKey(currentUser.username);
+        const statsKey = STORAGE_KEYS.getUserStatsKey(currentUser.username);
+
+        localStorage.setItem(historyKey, JSON.stringify(STATE.history.slice(-100)));
+        localStorage.setItem(balanceKey, STATE.balance.toString());
+        localStorage.setItem(statsKey, JSON.stringify(STATE.stats));
+        
+        // Update last save time display
+        if (elements.lastUpdate) {
+          elements.lastUpdate.textContent = new Date().toLocaleTimeString();
+        }
+      } catch (e) {
+        console.error('Error saving state:', e);
+        showNotification('Storage error. Please check browser settings.', 'error');
+      }
+    }
+
+    function resetState() {
+      STATE.balance = 0;
+      STATE.history = [];
+      STATE.stats = {
+        totalDeposits: 0,
+        totalWithdrawals: 0,
+        depositCount: 0,
+        withdrawalCount: 0
+      };
+    }
+
+    // ===== UI FUNCTIONS =====
+    function updateBalanceDisplay() {
+      const formatted = '₹' + STATE.balance.toFixed(2);
+      if (elements.balanceDisplay) elements.balanceDisplay.textContent = formatted;
+      if (elements.heroBalance) elements.heroBalance.textContent = formatted;
+      if (elements.lastUpdate) elements.lastUpdate.textContent = new Date().toLocaleTimeString();
+    }
+
+    function updateStatsDisplay() {
+      if (elements.heroDeposits) elements.heroDeposits.textContent = STATE.stats.depositCount;
+      if (elements.heroWithdrawals) elements.heroWithdrawals.textContent = STATE.stats.withdrawalCount;
+      if (elements.totalDeposits) elements.totalDeposits.textContent = '₹' + STATE.stats.totalDeposits.toFixed(2);
+      if (elements.totalWithdrawals) elements.totalWithdrawals.textContent = '₹' + STATE.stats.totalWithdrawals.toFixed(2);
+      if (elements.transactionCount) elements.transactionCount.textContent = STATE.history.length;
+    }
+
+    function renderHistory() {
+      if (!elements.historyList) return;
+      
+      elements.historyList.innerHTML = '';
+      
+      if (STATE.history.length === 0) {
+        const li = document.createElement('li');
+        li.className = 'text-slate-400 text-center py-4';
+        li.textContent = 'No transactions yet.';
+        elements.historyList.appendChild(li);
+        return;
+      }
+
+      STATE.history.slice().reverse().forEach((h, index) => {
+        const li = document.createElement('li');
+        const color = h.type === 'deposit' ? 'text-emerald-400' : 'text-rose-400';
+        const icon = h.type === 'deposit' ? '💰' : '🏧';
+        const typeLabel = h.type.charAt(0).toUpperCase() + h.type.slice(1);
+        
+        li.className = 'flex items-center justify-between bg-white/5 border border-white/10 rounded-lg px-3 py-2 fade-in';
+        li.style.animationDelay = `${index * 0.05}s`;
+        li.innerHTML = `
+          <div class="flex items-center gap-2">
+            <span class="${color}">${icon}</span>
+            <div>
+              <div class="text-sm font-medium">${typeLabel}: ₹${h.amount.toFixed(2)}</div>
+              <div class="text-xs text-slate-500">Balance: ₹${h.balanceAfter.toFixed(2)}</div>
+            </div>
+          </div>
+          <span class="text-xs text-slate-400">${h.time}</span>
+        `;
+        elements.historyList.appendChild(li);
+      });
+    }
+
+    function addHistory(type, amount) {
+      const entry = {
+        type,
+        amount,
+        balanceAfter: STATE.balance,
+        time: new Date().toLocaleString(),
+        timestamp: Date.now()
+      };
+      
+      STATE.history.push(entry);
+      if (STATE.history.length > 100) {
+        STATE.history = STATE.history.slice(-100);
+      }
+      
+      renderHistory();
+      saveState();
+    }
+
+    function showNotification(message, type = 'info') {
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      notification.innerHTML = `
+        <div class="flex items-center gap-3">
+          ${type === 'success' ? '<svg width="20" height="20" fill="none" stroke="#34d399" stroke-width="2"><path d="M4 12l4 4 8-8"/></svg>' : ''}
+          ${type === 'error' ? '<svg width="20" height="20" fill="none" stroke="#ef4444" stroke-width="2"><path d="M12 8v8M12 4h.01"/></svg>' : ''}
+          ${type === 'info' ? '<svg width="20" height="20" fill="none" stroke="#22d3ee" stroke-width="2"><circle cx="10" cy="10" r="8"/><path d="M10 6v4M10 14h.01"/></svg>' : ''}
+          <span>${message}</span>
+        </div>
+      `;
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => notification.remove(), 300);
+      }, 3000);
+    }
+
+    function setStatus(message, type = 'info') {
+      if (!elements.statusMsg) return;
+      
+      const colors = {
+        success: 'text-emerald-400',
+        error: 'text-rose-400',
+        info: 'text-cyan-300',
+        warning: 'text-amber-400'
+      };
+      elements.statusMsg.innerHTML = `<span class="${colors[type]}">${message}</span>`;
+    }
+
+    function clearStatus() {
+      if (elements.statusMsg) elements.statusMsg.innerHTML = '';
+    }
+
+    // ===== OPERATION SELECTION =====
+    function selectOperation(operation) {
+      STATE.selectedOperation = operation;
+      
+      [elements.btnDeposit, elements.btnWithdraw, elements.btnBalance, elements.btnLoan].forEach(btn => {
+        if (btn) {
+          btn.classList.remove('active', 'btn-primary');
+          btn.classList.add('btn-ghost');
+        }
+      });
+      
+      const activeBtn = operation === 'deposit' ? elements.btnDeposit : 
+                       operation === 'withdraw' ? elements.btnWithdraw : 
+                       operation === 'loan' ? elements.btnLoan :
+                       elements.btnBalance;
+      
+      if (activeBtn) {
+        activeBtn.classList.remove('btn-ghost');
+        activeBtn.classList.add('active', 'btn-primary');
+      }
+      
+      if (elements.btnConfirm) elements.btnConfirm.disabled = false;
+      clearStatus();
+      
+      if (operation === 'balance') {
+        if (elements.amountInput) {
+          elements.amountInput.value = '';
+          elements.amountInput.disabled = true;
+        }
+      } else {
+        if (elements.amountInput) {
+          elements.amountInput.disabled = false;
+          elements.amountInput.focus();
+        }
+      }
+    }
+
+    // ===== VALIDATION =====
+    function validateAmount(value) {
+      const num = parseFloat(value);
+      if (isNaN(num) || num <= 0) {
+        return { valid: false, error: 'Please enter a positive amount' };
+      }
+      if (num > 10000000) {
+        return { valid: false, error: 'Amount exceeds maximum limit (₹10,000,000)' };
+      }
+      if (!/^\d+(\.\d{1,2})?$/.test(value)) {
+        return { valid: false, error: 'Please use valid currency format (e.g., 100.50)' };
+      }
+      return { valid: true, amount: num };
+    }
+
+    // ===== OPERATIONS =====
+    function performDeposit() {
+      const value = elements.amountInput.value.trim();
+      const validation = validateAmount(value);
+      
+      if (!validation.valid) {
+        setStatus(validation.error, 'error');
+        showNotification(validation.error, 'error');
+        return;
+      }
+      
+      const amount = validation.amount;
+      STATE.balance += amount;
+      STATE.stats.totalDeposits += amount;
+      STATE.stats.depositCount++;
+      
+      addHistory('deposit', amount);
+      updateBalanceDisplay();
+      updateStatsDisplay();
+      
+      elements.amountInput.value = '';
+      setStatus(`Successfully deposited ₹${amount.toFixed(2)}`, 'success');
+      showNotification(`Deposited ₹${amount.toFixed(2)}`, 'success');
+    }
+
+    function performWithdraw() {
+      const value = elements.amountInput.value.trim();
+      const validation = validateAmount(value);
+      
+      if (!validation.valid) {
+        setStatus(validation.error, 'error');
+        showNotification(validation.error, 'error');
+        return;
+      }
+      
+      const amount = validation.amount;
+      
+      if (amount > STATE.balance) {
+        const shortfall = amount - STATE.balance;
+        setStatus(`Insufficient funds. You need ₹${shortfall.toFixed(2)} more.`, 'error');
+        showNotification('Insufficient funds for this withdrawal', 'error');
+        return;
+      }
+      
+      STATE.balance -= amount;
+      STATE.stats.totalWithdrawals += amount;
+      STATE.stats.withdrawalCount++;
+      
+      addHistory('withdraw', amount);
+      updateBalanceDisplay();
+      updateStatsDisplay();
+      
+      elements.amountInput.value = '';
+      setStatus(`Successfully withdrew ₹${amount.toFixed(2)}`, 'success');
+      showNotification(`Withdrew ₹${amount.toFixed(2)}`, 'success');
+    }
+
+    function performBalance() {
+      setStatus(`Current balance: ₹${STATE.balance.toFixed(2)}`, 'info');
+      showNotification(`Your balance is ₹${STATE.balance.toFixed(2)}`, 'info');
+    }
+
+    function performLoan() {
+      const value = elements.amountInput.value.trim();
+      const validation = validateAmount(value);
+      
+      if (!validation.valid) {
+        setStatus(validation.error, 'error');
+        showNotification(validation.error, 'error');
+        return;
+      }
+      
+      const amount = validation.amount;
+      
+      // Set a maximum loan amount (e.g., 50,000 INR)
+      const maxLoan = 50000;
+      if (amount > maxLoan) {
+        setStatus(`Loan amount exceeds maximum limit of ₹${maxLoan.toFixed(2)}`, 'error');
+        showNotification(`Maximum loan amount is ₹${maxLoan.toFixed(2)}`, 'error');
+        return;
+      }
+      
+      // Minimum loan amount check
+      if (amount < 1000) {
+        setStatus('Minimum loan amount is ₹1,000.00', 'error');
+        showNotification('Minimum loan amount is ₹1,000.00', 'error');
+        return;
+      }
+      
+      STATE.balance += amount;
+      STATE.stats.totalDeposits += amount;
+      STATE.stats.depositCount++;
+      
+      addHistory('loan', amount);
+      updateBalanceDisplay();
+      updateStatsDisplay();
+      
+      elements.amountInput.value = '';
+      setStatus(`Loan of ₹${amount.toFixed(2)} approved and added to your account`, 'success');
+      showNotification(`Loan approved: ₹${amount.toFixed(2)}`, 'success');
+    }
+
+    function confirmOperation() {
+      if (!STATE.selectedOperation) {
+        setStatus('Please select an operation first', 'warning');
+        return;
+      }
+      
+      switch (STATE.selectedOperation) {
+        case 'deposit':
+          performDeposit();
+          break;
+        case 'withdraw':
+          performWithdraw();
+          break;
+        case 'balance':
+          performBalance();
+          break;
+        case 'loan':
+          performLoan();
+          break;
+      }
+    }
+
+    function resetSimulator() {
+      if (!confirm('Are you sure you want to reset? This will clear all transaction history and set balance to ₹0.00')) {
+        return;
+      }
+      
+      resetState();
+      saveState();
+      updateBalanceDisplay();
+      updateStatsDisplay();
+      renderHistory();
+      
+      if (elements.amountInput) elements.amountInput.value = '';
+      clearStatus();
+      STATE.selectedOperation = null;
+      if (elements.btnConfirm) elements.btnConfirm.disabled = true;
+      
+      [elements.btnDeposit, elements.btnWithdraw, elements.btnBalance, elements.btnLoan].forEach(btn => {
+        if (btn) {
+          btn.classList.remove('active', 'btn-primary');
+          btn.classList.add('btn-ghost');
+        }
+      });
+      
+      showNotification('Simulator reset successfully', 'success');
+    }
+
+    // ===== EXPORT FUNCTIONS =====
+    function exportHistory() {
+      if (STATE.history.length === 0) {
+        showNotification('No transactions to export', 'info');
+        return;
+      }
+      
+      let csv = 'Type,Amount,Balance After,Date\n';
+      STATE.history.forEach(h => {
+        csv += `${h.type},${h.amount.toFixed(2)},${h.balanceAfter.toFixed(2)},"${h.time}"\n`;
+      });
+      
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `transaction-history-${currentUser.username}-${Date.now()}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      
+      showNotification('Transaction history exported', 'success');
+    }
+
+    function downloadAccountFile() {
+      const content = `Banking Transaction Simulator - Account Statement
+User: ${currentUser ? currentUser.name : 'Guest'}
+Username: ${currentUser ? currentUser.username : 'N/A'}
+Generated: ${new Date().toLocaleString()}
+
+Current Balance: ₹${STATE.balance.toFixed(2)}
+
+Statistics:
+- Total Deposits: ₹${STATE.stats.totalDeposits.toFixed(2)} (${STATE.stats.depositCount} transactions)
+- Total Withdrawals: ₹${STATE.stats.totalWithdrawals.toFixed(2)} (${STATE.stats.withdrawalCount} transactions)
+- Total Transactions: ${STATE.history.length}
+
+Transaction History:
+${STATE.history.map(h => `[${h.time}] ${h.type.toUpperCase()}: ₹${h.amount.toFixed(2)} - Balance: ₹${h.balanceAfter.toFixed(2)}`).join('\n')}
+
+---
+End of Statement
+`;
+      
+      const blob = new Blob([content], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `account-${currentUser ? currentUser.username : 'guest'}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+      
+      showNotification('Account file downloaded', 'success');
+    }
+
+    function quickDeposit(amount) {
+      STATE.balance += amount;
+      STATE.stats.totalDeposits += amount;
+      STATE.stats.depositCount++;
+      
+      addHistory('deposit', amount);
+      updateBalanceDisplay();
+      updateStatsDisplay();
+      
+      showNotification(`Quick deposited ₹${amount.toFixed(2)}`, 'success');
+    }
+
+    // ===== MOBILE MENU =====
+    function toggleMobileMenu() {
+      const menu = document.getElementById('mobileMenu');
+      const hamburger = document.getElementById('hamburger');
+      if (menu) menu.classList.toggle('active');
+      if (hamburger) hamburger.classList.toggle('active');
+    }
+
+    function closeMobileMenu() {
+      const menu = document.getElementById('mobileMenu');
+      const hamburger = document.getElementById('hamburger');
+      if (menu) menu.classList.remove('active');
+      if (hamburger) hamburger.classList.remove('active');
+    }
+
+    // ===== EVENT LISTENERS =====
+    function setupEventListeners() {
+      if (elements.btnDeposit) elements.btnDeposit.addEventListener('click', () => selectOperation('deposit'));
+      if (elements.btnWithdraw) elements.btnWithdraw.addEventListener('click', () => selectOperation('withdraw'));
+      if (elements.btnBalance) elements.btnBalance.addEventListener('click', () => selectOperation('balance'));
+      if (elements.btnLoan) elements.btnLoan.addEventListener('click', () => selectOperation('loan'));
+      if (elements.btnConfirm) elements.btnConfirm.addEventListener('click', confirmOperation);
+      if (elements.btnReset) elements.btnReset.addEventListener('click', resetSimulator);
+
+      if (elements.amountInput) {
+        elements.amountInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            confirmOperation();
+          }
+        });
+      }
+    }
+
+    // ===== INITIALIZATION =====
+    document.addEventListener('DOMContentLoaded', () => {
+      // Check if user is already logged in
+      checkAuth();
+      
+      // Setup event listeners
+      setupEventListeners();
+      
+      // Set year
+      const yearEl = document.getElementById('year');
+      if (yearEl) yearEl.textContent = new Date().getFullYear();
+      
+      // Smooth scroll for anchors
+      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+          const href = this.getAttribute('href');
+          if (href && href !== '#' && !href.includes('onclick')) {
+            e.preventDefault();
+            const target = document.querySelector(href);
+            if (target) {
+              target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              closeMobileMenu();
+            }
+          }
+        });
+      });
+
+      // Create demo user if not exists
+      const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '{}');
+      if (!users['demo']) {
+        users['demo'] = {
+          name: 'Demo User',
+          password: 'demo123',
+          createdAt: new Date().toISOString()
+        };
+        localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+      }
+    });
+  </script>
+</body>
+</html>
